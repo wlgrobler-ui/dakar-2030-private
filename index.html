@@ -1,1 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Dakar 2030 – Private Command Centre</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<style>
+
+body {
+    margin:0;
+    font-family:'Segoe UI', sans-serif;
+    background:linear-gradient(180deg,#0a0a0a,#111);
+    color:white;
+}
+
+header {
+    padding:30px;
+    text-align:center;
+    background:black;
+    border-bottom:2px solid #f5c518;
+}
+
+h1 { margin:0; color:#f5c518; }
+h2 { font-weight:300; }
+
+.container {
+    display:grid;
+    grid-template-columns: repeat(auto-fit,minmax(320px,1fr));
+    gap:25px;
+    padding:30px;
+}
+
+.card {
+    background:#1a1a1a;
+    padding:25px;
+    border-radius:12px;
+    box-shadow:0 0 20px rgba(0,0,0,0.6);
+    border:1px solid #222;
+}
+
+.card h3 {
+    margin-top:0;
+    color:#f5c518;
+}
+
+input {
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    background:#111;
+    border:1px solid #333;
+    color:white;
+    border-radius:6px;
+}
+
+.progress-bar {
+    background:#222;
+    border-radius:10px;
+    margin-top:15px;
+    height:20px;
+    overflow:hidden;
+}
+
+.progress {
+    height:100%;
+    width:0%;
+    background:#f5c518;
+    transition:0.4s;
+}
+
+.metric {
+    font-size:24px;
+    margin-top:10px;
+}
+
+.checklist label {
+    display:block;
+    margin-top:8px;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>PRIVATE PERFORMANCE COMMAND CENTRE</h1>
+<h2>Journey to Dakar 2030 – Operational Control</h2>
+</header>
+
+<div class="container">
+
+<!-- COUNTDOWN -->
+<div class="card">
+<h3>⏳ Countdown to Dakar 2030</h3>
+<div class="metric" id="countdown"></div>
+</div>
+
+<!-- FINANCE -->
+<div class="card">
+<h3>💰 Financial Target (R4,000,000)</h3>
+<input type="number" id="finance">
+<div class="progress-bar"><div class="progress" id="financeBar"></div></div>
+<div class="metric" id="financePercent"></div>
+</div>
+
+<!-- TRAINING -->
+<div class="card">
+<h3>🏋 Weekly Training (Goal 10h)</h3>
+<input type="number" id="training">
+<div class="progress-bar"><div class="progress" id="trainingBar"></div></div>
+<div class="metric" id="trainingPercent"></div>
+</div>
+
+<!-- BODY -->
+<div class="card">
+<h3>⚖ Body Weight</h3>
+<input type="number" id="weight">
+<div class="metric" id="weightDisplay"></div>
+</div>
+
+<!-- EVENTS -->
+<div class="card">
+<h3>🏍 Event Milestones</h3>
+<div class="checklist">
+<label><input type="checkbox" class="milestone" value="offroad"> Off-road Training Completed</label>
+<label><input type="checkbox" class="milestone" value="local"> Local Rally Completed</label>
+<label><input type="checkbox" class="milestone" value="africa"> African Rally Completed</label>
+<label><input type="checkbox" class="milestone" value="intl"> International Rally Completed</label>
+<label><input type="checkbox" class="milestone" value="qualification"> Dakar Qualification Approved</label>
+</div>
+</div>
+
+<!-- EQUIPMENT -->
+<div class="card">
+<h3>🔧 Equipment Acquisition</h3>
+<div class="checklist">
+<label><input type="checkbox" class="equip" value="nav"> Roadbook Navigation Setup</label>
+<label><input type="checkbox" class="equip" value="suspension"> Suspension Upgrade</label>
+<label><input type="checkbox" class="equip" value="gear"> Full Rally Gear</label>
+<label><input type="checkbox" class="equip" value="support"> Service Support Confirmed</label>
+</div>
+</div>
+
+<!-- READINESS SCORE -->
+<div class="card">
+<h3>📊 Campaign Readiness Score</h3>
+<div class="metric" id="readinessScore"></div>
+</div>
+
+</div>
+
+<script>
+
+const financeGoal = 4000000;
+const targetDate = new Date("January 5, 2030 00:00:00").getTime();
+
+function save(key,val){ localStorage.setItem(key,val); }
+function load(key){ return localStorage.getItem(key); }
+
+function updateCountdown() {
+    const now = new Date().getTime();
+    const distance = targetDate - now;
+    const days = Math.floor(distance / (1000*60*60*24));
+    document.getElementById("countdown").innerText = days + " Days Remaining";
+}
+
+function updateFinance() {
+    let val = document.getElementById("finance").value || 0;
+    save("finance",val);
+    let percent = (val/financeGoal)*100;
+    document.getElementById("financeBar").style.width = percent + "%";
+    document.getElementById("financePercent").innerText = Math.floor(percent) + "% Funded";
+    calculateReadiness();
+}
+
+function updateTraining() {
+    let val = document.getElementById("training").value || 0;
+    save("training",val);
+    let percent = (val/10)*100;
+    document.getElementById("trainingBar").style.width = percent + "%";
+    document.getElementById("trainingPercent").innerText = Math.floor(percent) + "% of Weekly Target";
+    calculateReadiness();
+}
+
+function updateWeight() {
+    let val = document.getElementById("weight").value || 0;
+    save("weight",val);
+    document.getElementById("weightDisplay").innerText = val + " kg";
+}
+
+function calculateReadiness(){
+    let finance = (document.getElementById("finance").value/financeGoal)*40;
+    let training = (document.getElementById("training").value/10)*20;
+
+    let milestones = document.querySelectorAll(".milestone:checked").length * 5;
+    let equipment = document.querySelectorAll(".equip:checked").length * 5;
+
+    let score = finance + training + milestones + equipment;
+    if(score>100) score=100;
+
+    document.getElementById("readinessScore").innerText = Math.floor(score) + "% Campaign Ready";
+}
+
+document.getElementById("finance").addEventListener("input", updateFinance);
+document.getElementById("training").addEventListener("input", updateTraining);
+document.getElementById("weight").addEventListener("input", updateWeight);
+
+document.querySelectorAll(".milestone").forEach(box=>{
+    box.addEventListener("change",()=>{
+        save(box.value,box.checked);
+        calculateReadiness();
+    });
+});
+
+document.querySelectorAll(".equip").forEach(box=>{
+    box.addEventListener("change",()=>{
+        save(box.value,box.checked);
+        calculateReadiness();
+    });
+});
+
+function loadAll(){
+    if(load("finance")) document.getElementById("finance").value=load("finance");
+    if(load("training")) document.getElementById("training").value=load("training");
+    if(load("weight")) document.getElementById("weight").value=load("weight");
+
+    document.querySelectorAll(".milestone").forEach(box=>{
+        if(load(box.value)==="true") box.checked=true;
+    });
+
+    document.querySelectorAll(".equip").forEach(box=>{
+        if(load(box.value)==="true") box.checked=true;
+    });
+
+    updateFinance();
+    updateTraining();
+    updateWeight();
+}
+
+setInterval(updateCountdown,1000);
+loadAll();
+
+</script>
+
+</body>
+</html>
