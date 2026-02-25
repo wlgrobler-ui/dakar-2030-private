@@ -22,7 +22,6 @@ header {
 }
 
 h1 { margin:0; color:#f5c518; }
-h2 { font-weight:300; }
 
 .container {
     display:grid;
@@ -35,8 +34,8 @@ h2 { font-weight:300; }
     background:#1a1a1a;
     padding:25px;
     border-radius:12px;
-    box-shadow:0 0 20px rgba(0,0,0,0.6);
     border:1px solid #222;
+    box-shadow:0 0 20px rgba(0,0,0,0.6);
 }
 
 .card h3 {
@@ -70,8 +69,30 @@ input {
 }
 
 .metric {
-    font-size:24px;
+    font-size:22px;
     margin-top:10px;
+}
+
+.countdown-grid {
+    display:grid;
+    grid-template-columns: repeat(5,1fr);
+    gap:10px;
+    text-align:center;
+    margin-top:15px;
+}
+
+.time-box {
+    background:#111;
+    padding:15px;
+    border-radius:8px;
+    border:1px solid #333;
+}
+
+.time-box span {
+    display:block;
+    font-size:26px;
+    font-weight:bold;
+    color:#f5c518;
 }
 
 .checklist label {
@@ -86,15 +107,21 @@ input {
 
 <header>
 <h1>PRIVATE PERFORMANCE COMMAND CENTRE</h1>
-<h2>Journey to Dakar 2030 – Operational Control</h2>
+<p>Journey to Dakar 2030 – Operational Control</p>
 </header>
 
 <div class="container">
 
-<!-- COUNTDOWN -->
+<!-- SMART COUNTDOWN -->
 <div class="card">
-<h3>⏳ Countdown to Dakar 2030</h3>
-<div class="metric" id="countdown"></div>
+<h3>⏳ Smart Countdown to Dakar 2030</h3>
+<div class="countdown-grid">
+<div class="time-box"><span id="years">0</span>Years</div>
+<div class="time-box"><span id="days">0</span>Days</div>
+<div class="time-box"><span id="hours">0</span>Hours</div>
+<div class="time-box"><span id="minutes">0</span>Minutes</div>
+<div class="time-box"><span id="seconds">0</span>Seconds</div>
+</div>
 </div>
 
 <!-- FINANCE -->
@@ -120,30 +147,7 @@ input {
 <div class="metric" id="weightDisplay"></div>
 </div>
 
-<!-- EVENTS -->
-<div class="card">
-<h3>🏍 Event Milestones</h3>
-<div class="checklist">
-<label><input type="checkbox" class="milestone" value="offroad"> Off-road Training Completed</label>
-<label><input type="checkbox" class="milestone" value="local"> Local Rally Completed</label>
-<label><input type="checkbox" class="milestone" value="africa"> African Rally Completed</label>
-<label><input type="checkbox" class="milestone" value="intl"> International Rally Completed</label>
-<label><input type="checkbox" class="milestone" value="qualification"> Dakar Qualification Approved</label>
-</div>
-</div>
-
-<!-- EQUIPMENT -->
-<div class="card">
-<h3>🔧 Equipment Acquisition</h3>
-<div class="checklist">
-<label><input type="checkbox" class="equip" value="nav"> Roadbook Navigation Setup</label>
-<label><input type="checkbox" class="equip" value="suspension"> Suspension Upgrade</label>
-<label><input type="checkbox" class="equip" value="gear"> Full Rally Gear</label>
-<label><input type="checkbox" class="equip" value="support"> Service Support Confirmed</label>
-</div>
-</div>
-
-<!-- READINESS SCORE -->
+<!-- READINESS -->
 <div class="card">
 <h3>📊 Campaign Readiness Score</h3>
 <div class="metric" id="readinessScore"></div>
@@ -153,18 +157,47 @@ input {
 
 <script>
 
-const financeGoal = 4000000;
+// TARGET DATE (edit if Dakar date confirmed)
 const targetDate = new Date("January 5, 2030 00:00:00").getTime();
+const financeGoal = 4000000;
+
+function updateCountdown() {
+
+    const now = new Date().getTime();
+    let diff = targetDate - now;
+
+    if (diff <= 0) {
+        document.querySelectorAll(".time-box span").forEach(el => el.innerText = "0");
+        return;
+    }
+
+    const seconds = Math.floor(diff / 1000) % 60;
+    const minutes = Math.floor(diff / (1000 * 60)) % 60;
+    const hours = Math.floor(diff / (1000 * 60 * 60)) % 24;
+    const daysTotal = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    // Accurate year calculation accounting for leap years
+    const nowDate = new Date();
+    const target = new Date(targetDate);
+    let years = target.getFullYear() - nowDate.getFullYear();
+
+    const thisYearTarget = new Date(nowDate.getFullYear() + years, target.getMonth(), target.getDate());
+    if (nowDate > thisYearTarget) {
+        years--;
+    }
+
+    const yearAdjustedDate = new Date(nowDate.getFullYear() + years, nowDate.getMonth(), nowDate.getDate());
+    const remainingDays = Math.floor((target - yearAdjustedDate) / (1000 * 60 * 60 * 24));
+
+    document.getElementById("years").innerText = years;
+    document.getElementById("days").innerText = remainingDays;
+    document.getElementById("hours").innerText = hours;
+    document.getElementById("minutes").innerText = minutes;
+    document.getElementById("seconds").innerText = seconds;
+}
 
 function save(key,val){ localStorage.setItem(key,val); }
 function load(key){ return localStorage.getItem(key); }
-
-function updateCountdown() {
-    const now = new Date().getTime();
-    const distance = targetDate - now;
-    const days = Math.floor(distance / (1000*60*60*24));
-    document.getElementById("countdown").innerText = days + " Days Remaining";
-}
 
 function updateFinance() {
     let val = document.getElementById("finance").value || 0;
@@ -191,15 +224,10 @@ function updateWeight() {
 }
 
 function calculateReadiness(){
-    let finance = (document.getElementById("finance").value/financeGoal)*40;
-    let training = (document.getElementById("training").value/10)*20;
-
-    let milestones = document.querySelectorAll(".milestone:checked").length * 5;
-    let equipment = document.querySelectorAll(".equip:checked").length * 5;
-
-    let score = finance + training + milestones + equipment;
+    let finance = (document.getElementById("finance").value/financeGoal)*50;
+    let training = (document.getElementById("training").value/10)*30;
+    let score = finance + training;
     if(score>100) score=100;
-
     document.getElementById("readinessScore").innerText = Math.floor(score) + "% Campaign Ready";
 }
 
@@ -207,33 +235,10 @@ document.getElementById("finance").addEventListener("input", updateFinance);
 document.getElementById("training").addEventListener("input", updateTraining);
 document.getElementById("weight").addEventListener("input", updateWeight);
 
-document.querySelectorAll(".milestone").forEach(box=>{
-    box.addEventListener("change",()=>{
-        save(box.value,box.checked);
-        calculateReadiness();
-    });
-});
-
-document.querySelectorAll(".equip").forEach(box=>{
-    box.addEventListener("change",()=>{
-        save(box.value,box.checked);
-        calculateReadiness();
-    });
-});
-
 function loadAll(){
     if(load("finance")) document.getElementById("finance").value=load("finance");
     if(load("training")) document.getElementById("training").value=load("training");
     if(load("weight")) document.getElementById("weight").value=load("weight");
-
-    document.querySelectorAll(".milestone").forEach(box=>{
-        if(load(box.value)==="true") box.checked=true;
-    });
-
-    document.querySelectorAll(".equip").forEach(box=>{
-        if(load(box.value)==="true") box.checked=true;
-    });
-
     updateFinance();
     updateTraining();
     updateWeight();
